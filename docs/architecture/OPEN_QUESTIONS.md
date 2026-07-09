@@ -48,3 +48,12 @@ move the item to `DECISIONS.md` when settled.
 10. **Native app** — decided to build web-only for now (responsive/PWA);
     revisit only if browser feedback from real students surfaces a real
     gap.
+11. **`validate` is synchronous-only** (`ExerciseTrainer`'s `validate:
+    (exercise, answer) => TFeedback`). This is fine for every closed-ended
+    answer type on the roadmap (multiple choice, drag & drop, text
+    highlight, matching, ordering — all can be scored by a pure sync
+    function). It will **not** be fine for a Free Text answer type
+    evaluated by an LLM, which needs to be async. Not fixing this
+    pre-emptively — flagging it so the signature change (`TFeedback |
+    Promise<TFeedback>`) is a known, deliberate step when Free Text is
+    actually built, not a surprise refactor.
