@@ -1,7 +1,9 @@
 # NLP Trainer v2
 
-Project infrastructure bootstrap. No business logic, NLP features, or AI
-evaluation are implemented yet — this is a scaffold only.
+Practitioner Pilot v1 — a focused validation pilot with one working
+training module (Communication Model), rule-based (non-AI) validation,
+and a calm, professional practice UI. See `docs/architecture/` for what's
+built vs. still planned.
 
 ## Stack
 

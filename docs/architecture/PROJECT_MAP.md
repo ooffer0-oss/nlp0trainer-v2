@@ -9,57 +9,92 @@ NLP Trainer
 │
 ├── Frontend                          [קיים]
 │   ├── App.tsx
-│   └── SessionScreen.tsx
+│   ├── HomeScreen.tsx
+│   └── CommunicationModelTrainerScreen.tsx
 │
-├── State Machine                     [קיים — שלד בלבד]
+├── Training Framework (משותף)        [קיים]
+│   ├── ExerciseTrainer.tsx
+│   └── ExerciseCard.tsx
+│
+├── State Machine                     [קיים]
 │   └── sessionMachine.ts
 │
-├── Evaluation                        [לא קיים עדיין — מתוכנן]
-│   └── evaluationEngine.ts
+├── Communication Model — Module      [קיים]
+│   ├── exercises.ts (תוכן לדוגמה, טרם אושר על ידי מורה)
+│   ├── CommunicationModelAnswerArea.tsx
+│   └── CommunicationModelExplanation.tsx
 │
-└── Database                          [לא קיים עדיין — מתוכנן]
-    └── sessionRepository.ts
+├── Evaluation                        [קיים חלקית]
+│   └── validation/communicationModel.ts (rule-based, מודול אחד בלבד)
+│
+├── מודולי תוכן נוספים (מטא מודל, מילטון מודל,
+│   הנחות יסוד, מודל השינוי המורחב, אמונות יסוד) [לא קיים עדיין]
+│
+├── Master Practitioner (הנחיה + סופרויזן) [לא קיים עדיין]
+│
+└── Database / Persistence            [לא קיים עדיין]
 ```
 
 ## Frontend — קיים
 
 **`src/App.tsx`**
-נקודת ההרכבה של האפליקציה. עוטף את המסך היחיד שקיים כרגע (`SessionScreen`)
-בתוך מעטפת העמוד (`AppShell`). לא מכיל לוגיקה — רק הרכבה של קומפוננטות.
+עובר בין שני מסכים: `HomeScreen` (מסך פתיחה) ו-
+`CommunicationModelTrainerScreen` (מסך התרגול), לפי state מקומי פשוט
+(`useState`). אין עדיין ראוטר — זו החלטה מודעת עד שיהיו כמה מודולים
+במקביל (ר' `OPEN_QUESTIONS.md`).
 
-**`src/components/session/SessionScreen.tsx`**
-המסך שמחבר את ה-UI למכונת המצבים. מחזיק `useMachine(sessionMachine)`,
-מציג את המצב הנוכחי (`state.value`) ומאפשר להפעיל את האירועים
-`START_SESSION` / `END_SESSION` / `RESET` דרך כפתורים. שאר האזורים במסך
-(`PromptPanel`, `ResponseInput`, `FeedbackPanel`) הם placeholder בלבד —
-אין בהם תוכן אמיתי.
+**`src/components/home/HomeScreen.tsx`**
+מסך כניסה מינימלי: לוגו, שם הפרויקט, תיאור קצר, כפתור "Start Practice"
+אחד. בלי Header/ניווט — בהתאם לספק שדרש מסך פתיחה "נקי" לגמרי.
 
-## State Machine — קיים (שלד בלבד)
+**`src/components/communicationModel/CommunicationModelTrainerScreen.tsx`**
+עמוד המודול הראשון: כותרת + הסבר קצר, ואז מרכיב את ה-Training Framework
+הגנרי עם הנתונים/רכיבים הספציפיים למודל התקשורת.
+
+## Training Framework — קיים (משותף לכל מודול עתידי)
+
+**`src/components/training/ExerciseTrainer.tsx`**
+הרכיב הגנרי שמניע את מחזור החיים: מציג תרגיל → קולט תשובה → מריץ
+`validate` → מציג הסבר → תרגיל הבא. הוא לא יודע כלום על "מודל תקשורת"
+באופן ספציפי — מקבל את כל מה שספציפי למודול (רינדור השאלה, אזור
+התשובה, ההסבר, ופונקציית הבדיקה) כ-props. מודול חדש לא נוגע בקובץ הזה.
+
+**`src/components/training/ExerciseCard.tsx`**
+כרטיס תצוגה משותף לסיפור/תרחיש של התרגיל (כותרת + רמת קושי אופציונלית
++ טקסט). משמש בתוך `renderPrompt` של כל מודול.
+
+## State Machine — קיים
 
 **`src/machines/session/sessionMachine.ts`**
-מגדיר את *צורת* מחזור החיים של סשן אימון בעזרת XState 5:
-`idle → active (presentingPrompt → awaitingResponse → evaluatingResponse
-→ showingFeedback) → paused / completed / aborted`.
-המצב `evaluatingResponse` הוא נקודת החיבור העתידית ל-Evaluation — כרגע
-יוצאים ממנו רק על ידי אירוע מפורש (`EVALUATION_COMPLETE`), בלי שום קריאה
-אמיתית ללוגיקת הערכה. אין כאן NLP, אין AI, אין בדיקת נכונות.
+מגדיר את מחזור החיים (`idle → active(presentingPrompt →
+awaitingResponse → evaluatingResponse → showingFeedback) → completed`)
+ומופעל בפועל על ידי `ExerciseTrainer`. זו אותה מכונה מהשלד המקורי — לא
+נוצרה מכונה נפרדת למודול התקשורת, כי המכונה הגנרית כבר התאימה בדיוק.
 
-## Evaluation — לא קיים עדיין
+## Communication Model — Module — קיים
 
-**`evaluationEngine.ts`** (מתוכנן, טרם נוצר)
-הרעיון: הרכיב שיקבל תשובה של המשתמש ויחזיר משוב/ציון. איך בדיוק (חוקים
-קשיחים / מודל שפה / שילוב) — עדיין החלטה פתוחה (ר' `OPEN_QUESTIONS.md`,
-סעיף 3). כרגע מכונת המצבים רק "מדמה" שיש הערכה, בלי לקרוא לשום מנוע.
+**`src/content/communicationModel/{types.ts,exercises.ts}`**
+מודל הנתונים לתרגיל (סיפור, 5 רכיבים — Event / Internal Representation /
+State / Behavior / Result — כל אחד עם אפשרויות בחירה מרובה, תשובה נכונה
+והסבר). כולל 3 תרגילי דוגמה. **התוכן לא אושר על ידי מורה/מומחה תוכן —
+לצורך בדיקת המנגנון בלבד**, יש להחליף לפני שימוש אמיתי עם תלמידים.
 
-## Database — לא קיים עדיין
+**`src/components/communicationModel/CommunicationModelAnswerArea.tsx`**
+5 קבוצות בחירה מרובה (אחת לכל רכיב במודל התקשורת).
 
-**`sessionRepository.ts`** (מתוכנן, טרם נוצר)
-הרעיון: שכבת גישה לשמירת/שליפת סשנים (היסטוריה, התקדמות). אין כרגע שום
-persistence בפרויקט — לא local storage, לא backend, לא DB. גם זו החלטה
-פתוחה (ר' `OPEN_QUESTIONS.md`, סעיפים 4–5).
+**`src/components/communicationModel/CommunicationModelExplanation.tsx`**
+תצוגת ניתוח לאחר שליחה: ציון, וכל רכיב — נכון/לא נכון, מה נבחר, התשובה
+הנכונה, וההסבר המקצועי מדוע.
 
----
+## Evaluation — קיים חלקית
 
-קבצים נוספים שקיימים בפועל (layout / placeholders גנריים) מפורטים ב-
-[`ARCHITECTURE.md`](./ARCHITECTURE.md) ואינם חוזרים כאן כדי לשמור על
-המסמך תמציתי.
+**`src/lib/validation/communicationModel.ts`**
+פונקציה טהורה (rule-based, ללא AI) שמשווה בחירה מול תשובה נכונה לכל
+רכיב. **קיימת רק עבור מודל התקשורת** — אין מנוע הערכה כללי, ואין AI
+Evaluation (מחוץ לתחום Pilot v1 במפורש).
+
+## מודולים נוספים / Master Practitioner / Database — לא קיים עדיין
+
+מטא מודל, מילטון מודל, הנחות יסוד, מודל השינוי המורחב, אמונות יסוד,
+זרימת מאסטר עם סופרויזן, ושכבת שמירת נתונים — אף אחד מאלה עדיין לא
+נבנה. פירוט מה פתוח לגבי כל אחד ב-`OPEN_QUESTIONS.md`.
